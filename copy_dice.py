@@ -5,6 +5,7 @@ from telethon.sync import TelegramClient
 from dotenv import load_dotenv
 import os
 import time
+from PIL import Image
 
 load_dotenv()
 
@@ -29,10 +30,10 @@ def get_dice_result(client):
     return None
 
 # Function to draw the dice face in Pygame (with animated rolling effect)
-def draw_dice_face(screen, result, size=150):
+def draw_dice_face(screen, result, size=100):
     dice_color = (230, 230, 230)
     border_color = (0, 0, 0)  # Black border for the dice
-    dot_color = (0, 0, 0)  # Dot color (dark grey)
+    dot_color = (255, 0, 0) if result == 1 else (0, 0, 0)  # Red for result 1, Black otherwise
     border_width = 10  # Border thickness
     radius = 20  # Rounded corners for the dice
 
@@ -51,7 +52,7 @@ def draw_dice_face(screen, result, size=150):
 
     # Draw the dots for the specified result
     for pos in positions[result]:
-        pygame.draw.circle(screen, dot_color, pos, 15)  # 15px radius for each dot
+        pygame.draw.circle(screen, dot_color, pos, 10)  # 15px radius for each dot
 
 # Function to simulate a smooth rolling dice animation
 def roll_dice_animation(client, result, output_file='dice_result.png'):
@@ -82,10 +83,22 @@ def roll_dice_animation(client, result, output_file='dice_result.png'):
     pygame.image.save(screen, output_file)
     pygame.quit()
 
-# Function to send the recreated dice to Telegram group
-def send_dice_to_group(client, group_name, dice_image='dice_result.png'):
-    client.send_file(group_name, dice_image)
-    print(f"Dice result sent to group '{group_name}'!")
+    # Convert the saved image to a .webp format (necessary for Telegram stickers)
+    image = Image.open(output_file)
+    image = image.convert("RGBA")  # Ensure RGBA for transparency
+    webp_file = output_file.replace('.png', '.webp')
+    image.save(webp_file, 'WEBP')
+
+    # Remove the original PNG file (optional)
+    os.remove(output_file)
+
+    return webp_file
+
+# Function to send the recreated dice as a sticker to Telegram group
+def send_dice_to_group(client, group_name, dice_sticker_path):
+    # Send the sticker to the group using the send_file method
+    client.send_file(group_name, dice_sticker_path, caption="Here is the dice roll result!")
+    print(f"Dice result sent as sticker to group '{group_name}'!")
 
 # Main function to orchestrate the process
 def main():
@@ -112,10 +125,26 @@ def main():
         sys.exit()
 
     print(f"Extracted dice result: {dice_result}")
-    roll_dice_animation(client, dice_result)  # Create the animated dice roll
+    dice_sticker = roll_dice_animation(client, dice_result)  # Create the animated dice roll and convert to .webp
+
+    
+    
+# async def find_group():
+#     async with client:
+#         print("Fetching your groups...")
+#         async for dialog in client.iter_dialogs():
+#             # Check if the dialog title matches the target group title
+#             if dialog.is_group and dialog.name == TARGET_GROUP:
+#                 print(f"Group found: {dialog.name}")
+#                 print(f"Group ID: {dialog.id}")
+#                 # print(f"Group Username: {dialog.entity.username}")
+#                 return dialog
+
+#         print("Group not found. Please ensure the title is correct.")
+
 
     target_group = -4671858349  # Replace with your group username or ID
-    send_dice_to_group(client, target_group)
+    send_dice_to_group(client, target_group, dice_sticker)
 
     client.disconnect()
 
