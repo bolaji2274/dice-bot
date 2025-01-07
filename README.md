@@ -1,1 +1,1 @@
-# dice-bot
+# telegram-bot
