@@ -10,10 +10,12 @@ from PIL import Image
 load_dotenv()
 
 # Telegram API credentials
-API_ID = os.getenv("TELEGRAM_API_ID")
-API_HASH = os.getenv("TELEGRAM_API_HASH")
-PHONE_NUMBER = '+2349155113797'  # Replace with your phone number
-SESSION_NAME = "dice_forward_bot"
+API_ID = os.getenv("TELEGRAM_API_ID") # Replace with your API ID and Hash
+API_HASH = os.getenv("TELEGRAM_API_HASH") # Replace with your API ID and Hash
+PHONE_NUMBER = 'your_telegram_number'  # +94 Replace with your phone number
+SESSION_NAME = "dice_bot"
+
+group = 'your_group_id' # Replace with your group ID or username (e.g., 'tgbots') 
 
 # Function to retrieve the dice result from Telegram
 def get_dice_result(client):
@@ -30,15 +32,19 @@ def get_dice_result(client):
     return None
 
 # Function to draw the dice face in Pygame (with animated rolling effect)
-def draw_dice_face(screen, result, size=100):
+# Function to draw the dice face in Pygame (with animated rolling effect)
+def draw_dice_face(screen, result, size=100, background_color=(0, 0, 0)):
     dice_color = (230, 230, 230)
     border_color = (0, 0, 0)  # Black border for the dice
     dot_color = (255, 0, 0) if result == 1 else (0, 0, 0)  # Red for result 1, Black otherwise
     border_width = 10  # Border thickness
     radius = 20  # Rounded corners for the dice
 
+    # Fill the screen with the background color (dark)
+    screen.fill(background_color)
+
     # Dice border (rounded corners)
-    pygame.draw.rect(screen, dice_color, (75, 75, size, size), border_width, border_radius=radius)
+    pygame.draw.rect(screen, dice_color, (75, 75, size, size), border_radius=radius)
 
     # Positions for dots based on the dice number
     positions = {
@@ -59,29 +65,20 @@ def roll_dice_animation(client, result, output_file='dice_result.png'):
     pygame.init()
 
     # Set up screen for animation
-    screen = pygame.display.set_mode((300, 300))
-    pygame.display.set_caption('Rolling Dice')
-
-    # Dice size and frame rate
+    screen = pygame.Surface((300, 300), pygame.SRCALPHA)  # Use SRCALPHA for transparency
     size = 150
     frames = 30  # Number of frames for the roll animation
     roll_results = [random.choice([1, 2, 3, 4, 5, 6]) for _ in range(frames)]
 
-    # Loop through the frames to create the rolling effect
+    # Loop through the frames to create the rolling effect (in memory)
     for i in range(frames):
-        screen.fill((255, 255, 255))  # Clear the screen
-        draw_dice_face(screen, roll_results[i], size)
-        pygame.display.update()  # Update the display to show the current frame
-        time.sleep(0.05)  # Small delay for smooth transition
+        screen.fill((0, 0, 0, 0))  # Transparent background for animation
+        draw_dice_face(screen, roll_results[i], size, background_color=(0, 0, 0))
 
     # Finally, draw the final result after the roll
-    screen.fill((255, 255, 255))  # Clear the screen
-    draw_dice_face(screen, result, size)
-    pygame.display.update()  # Show the final result
-
-    # Save the final result as an image
-    pygame.image.save(screen, output_file)
-    pygame.quit()
+    screen.fill((0, 0, 0, 0))  # Transparent background for the final frame
+    draw_dice_face(screen, result, size, background_color=(0, 0, 0))
+    pygame.image.save(screen, output_file)  # Save only the final result
 
     # Convert the saved image to a .webp format (necessary for Telegram stickers)
     image = Image.open(output_file)
@@ -89,7 +86,7 @@ def roll_dice_animation(client, result, output_file='dice_result.png'):
     webp_file = output_file.replace('.png', '.webp')
     image.save(webp_file, 'WEBP')
 
-    # Remove the original PNG file (optional)
+    # Optionally remove the original PNG file
     os.remove(output_file)
 
     return webp_file
@@ -98,7 +95,7 @@ def roll_dice_animation(client, result, output_file='dice_result.png'):
 def send_dice_to_group(client, group_name, dice_sticker_path):
     # Send the sticker to the group using the send_file method
     client.send_file(group_name, dice_sticker_path, caption="Here is the dice roll result!")
-    print(f"Dice result sent as sticker to group '{group_name}'!")
+    print(f"Dice result sent to the group '{group_name}'!")
 
 # Main function to orchestrate the process
 def main():
@@ -143,7 +140,7 @@ def main():
 #         print("Group not found. Please ensure the title is correct.")
 
 
-    target_group = -4671858349  # Replace with your group username or ID
+    target_group = group  # Replace with your group username or ID
     send_dice_to_group(client, target_group, dice_sticker)
 
     client.disconnect()

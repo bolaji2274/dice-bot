@@ -1,9 +1,6 @@
-
 telethon
 python-dotenv
 telethon 
 pygame
 pillow
-PyOpenGL
-PyOpenGL_accelerate
 numpy
