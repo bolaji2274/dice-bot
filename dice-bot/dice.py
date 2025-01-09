@@ -32,7 +32,6 @@ def get_dice_result(client):
     return None
 
 # Function to draw the dice face in Pygame (with animated rolling effect)
-# Function to draw the dice face in Pygame (with animated rolling effect)
 def draw_dice_face(screen, result, size=100, background_color=(0, 0, 0)):
     dice_color = (230, 230, 230)
     border_color = (0, 0, 0)  # Black border for the dice
